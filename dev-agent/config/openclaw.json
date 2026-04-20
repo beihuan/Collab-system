@@ -30,6 +30,7 @@
     ]
   },
   "skills": [
+    "dev-collab-system",
     "dev-progress-reporter",
     "dev-task-receiver",
     "dev-blocker-notifier",
