@@ -1,0 +1,38 @@
+{
+  "name": "Developer Agent - {PERSON_NAME}",
+  "description": "开发者Agent，负责进度上报、任务接收、阻塞通知和代码活动追踪",
+  "identity": {
+    "name": "Dev-Agent-{PERSON_NAME}",
+    "role": "{ROLE}",
+    "person": "{PERSON_NAME}",
+    "projects": ["项目A", "项目B"]
+  },
+  "cron": [
+    {
+      "name": "morning-task-check",
+      "schedule": "at 09:00 on weekdays",
+      "command": "检查飞书群组中的今日任务指派，读取并展示给开发者",
+      "skill": "dev-task-receiver"
+    },
+    {
+      "name": "evening-progress-report",
+      "schedule": "at 18:00 on weekdays",
+      "command": "收集今日代码活动和人工输入，生成结构化进度报告，经人类确认后发送到飞书群组",
+      "skill": "dev-progress-reporter"
+    }
+  ],
+  "heartbeat": {
+    "interval": "30m",
+    "checks": [
+      "检查是否有新的任务指派消息",
+      "检查进行中的任务是否有代码活动（4小时无提交则询问是否遇到阻塞）",
+      "检查是否有PR需要处理（审核/合并）"
+    ]
+  },
+  "skills": [
+    "dev-progress-reporter",
+    "dev-task-receiver",
+    "dev-blocker-notifier",
+    "dev-code-activity-tracker"
+  ]
+}
