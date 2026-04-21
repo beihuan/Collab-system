@@ -9,10 +9,12 @@ description: Detects and reports blockers encountered during development work, p
 
 This skill enables developer agents to proactively notify the PM Agent when they encounter blockers. It supports both manual triggering (when the developer tells their agent they're blocked) and automatic detection (when no progress is detected on an in-progress task).
 
+**重要原则**：开发者Agent不直接操作多维表格。所有表格更新（如标记任务为"已阻塞"）由PM Agent负责。开发者Agent只通过飞书群组向PM Agent发送阻塞报告，PM Agent收到后会更新表格。
+
 ## Prerequisites
 
 - Feishu CLI authenticated and configured
-- Read `references/feishu-config.md` for configuration values
+- Read `references/feishu-config.md` for CHAT_ID
 - Read `references/identity.md` for your name and role
 
 ## Workflow
@@ -78,19 +80,13 @@ Ask the developer for details:
 #### Step 4: Send Notification
 
 ```bash
-# Send to group chat
+# Send to group chat — PM Agent will update the Bitable accordingly
 lark-cli chat message send --chat-id {CHAT_ID} \
   --msg-type interactive \
   --content '{"config":{"wide_screen_mode":true},"header":{"title":{"tag":"plain_text","content":"🚫 阻塞报告 — {PERSON_NAME}"}},"elements":[{"tag":"markdown","content":"{BLOCKER_SUMMARY}"}]}'
 ```
 
-Also update the Bitable task record:
-
-```bash
-lark-cli bitable record update --app-token {APP_TOKEN} --table-id {TABLE_ID} \
-  --record-id {RECORD_ID} \
-  --fields '{"status": "已阻塞", "blocker": "{BLOCKER_DESCRIPTION}"}'
-```
+> ⚠️ 不要直接更新多维表格。PM Agent 收到阻塞报告后会自动将任务标记为"已阻塞"。
 
 ### Automatic Detection (Heartbeat)
 
@@ -108,13 +104,12 @@ The heartbeat checks for stalled tasks every 30 minutes:
 #### Heartbeat Check Flow
 
 ```
-1. Read assigned in-progress tasks from Bitable
-2. Check git activity for each task
-3. If no activity detected for 4+ hours:
+1. Check git activity for each in-progress task (based on local repo)
+2. If no activity detected for 4+ hours:
    → Ask developer: "我注意到 [TASK-XXXX] 最近没有代码提交，是否遇到了阻塞？"
-4. If developer confirms blocker:
+3. If developer confirms blocker:
    → Trigger manual blocker notification flow
-5. If developer says no blocker:
+4. If developer says no blocker:
    → Log and check again in next heartbeat
 ```
 
@@ -122,29 +117,26 @@ The heartbeat checks for stalled tasks every 30 minutes:
 
 When a blocker is reported, track its resolution:
 
-1. **Reported**: Blocker notification sent
-2. **Acknowledged**: PM Agent or team member responds
+1. **Reported**: Blocker notification sent to group chat
+2. **Acknowledged**: PM Agent or team member responds in group chat
 3. **In Progress**: Someone is working on resolving the blocker
 4. **Resolved**: Blocker is removed, task can continue
 
 When the blocker is resolved:
 
 ```bash
-# Update Bitable
-lark-cli bitable record update --app-token {APP_TOKEN} --table-id {TABLE_ID} \
-  --record-id {RECORD_ID} \
-  --fields '{"status": "进行中", "blocker": ""}'
-
-# Notify group chat
+# Only notify the group chat — PM Agent will update the Bitable
 lark-cli chat message send --chat-id {CHAT_ID} \
   --msg-type text \
   --content "✅ [TASK-XXXX] 阻塞已解除 — {PERSON_NAME} 可以继续工作"
 ```
 
+> ⚠️ 不要直接更新多维表格。PM Agent 收到阻塞解除消息后会自动将任务状态改回"进行中"。
+
 ## Error Handling
 
 | Scenario | Action |
 |----------|--------|
-| Developer not responding | Retry in 30 minutes, then notify PM Agent |
-| Bitable update fails | Send notification anyway, retry Bitable update later |
+| Developer not responding | Retry in 30 minutes, then notify PM Agent via group chat |
+| Feishu message send fails | Retry once, then alert developer in terminal |
 | Multiple blockers at once | Send consolidated blocker report |
