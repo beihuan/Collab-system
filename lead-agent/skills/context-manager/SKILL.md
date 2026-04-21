@@ -1,6 +1,6 @@
 ---
-name: pm-context-manager
-description: Manages PM Agent's understanding of the project by reading code repositories, existing documents, and maintaining a persistent project context document. Use when initializing PM Agent for the first time, when user asks to "update project context", "review project understanding", "read codebase", or when the Socratic learning skill identifies context gaps that require deeper investigation.
+name: context-manager
+description: Manages your understanding", "read codebase", or when the Socratic learning skill identifies context gaps that require deeper investigation.
 ---
 
 # PM Context Manager
@@ -107,7 +107,7 @@ Present the initial understanding to the human and ask deep questions:
 
 #### Trigger: When Socratic Learning Identifies Gaps
 
-When `pm-socratic-learner` identifies a context gap, this skill is invoked to:
+When `socratic-learner` identifies a context gap, this skill is invoked to:
 
 1. Read the relevant code/docs to fill the gap
 2. Update `references/project-context.md`

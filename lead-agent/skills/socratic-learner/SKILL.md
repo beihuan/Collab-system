@@ -1,6 +1,6 @@
 ---
-name: pm-socratic-learner
-description: Implements Socratic questioning mechanism for PM Agent to deepen project understanding through human interaction. Use when PM Agent is corrected by a human, when information is found to be incomplete during task planning or progress review, or when user explicitly asks to "review understanding", "correct understanding", or "teach PM Agent". Triggers deep follow-up questions to fill context gaps and updates project context document.
+name: socratic-learner
+description: Implements Socratic questioning mechanism to deepen project understanding through human interaction. Use when you are corrected by a human, when information is found incomplete during task planning or progress review, or when user explicitly asks to "review understanding", "correct understanding", or "teach me". Triggers deep follow-up questions to fill context gaps and updates project context document.
 ---
 
 # PM Socratic Learner
@@ -144,7 +144,7 @@ After each Socratic interaction that yields new understanding:
 1. **Immediately propose** what to update in the project context
 2. **Be specific** about which section and what content changes
 3. **Get human confirmation** before updating
-4. **Use `pm-context-manager`** to execute the update
+4. **Use `context-manager`** to execute the update
 5. **Record the learning** in the "关键决策记录" table
 
 ## Question Generation Guidelines
@@ -180,8 +180,8 @@ After each Socratic interaction that yields new understanding:
 
 | Skill | How Socratic Learner Integrates |
 |-------|-------------------------------|
-| pm-morning-planner | Asks questions when task info is incomplete |
-| pm-progress-reviewer | Asks questions when progress reports are unclear |
-| pm-meeting-assistant | Asks questions when meeting minutes are ambiguous |
-| pm-context-manager | Triggers context updates after learning |
-| pm-bitable-manager | Asks questions before making high-risk updates |
+| morning-planner | Asks questions when task info is incomplete |
+| progress-reviewer | Asks questions when progress reports are unclear |
+| meeting-assistant | Asks questions when meeting minutes are ambiguous |
+| context-manager | Triggers context updates after learning |
+| bitable-manager | Asks questions before making high-risk updates |

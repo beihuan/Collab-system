@@ -12,6 +12,6 @@
 - APP_SECRET: <请填入飞书机器人应用的App Secret>
 
 ## 人员映射
-- Person A (你/PM): <飞书用户ID>
+- Person A (你/PM+Dev): <飞书用户ID>
 - Person B (全栈开发): <飞书用户ID>
 - Person C (后端开发): <飞书用户ID>

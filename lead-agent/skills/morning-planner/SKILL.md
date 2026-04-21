@@ -1,5 +1,5 @@
 ---
-name: pm-morning-planner
+name: morning-planner
 description: Generates daily morning task assignments for each team member based on Feishu Bitable task status. Use when triggered by morning cron job (08:00) or when user asks to "plan today's tasks", "generate task assignments", "assign tasks", or "morning planning". Creates structured assignment documents and sends them via Feishu group chat.
 ---
 
@@ -11,7 +11,7 @@ This skill generates personalized task assignment documents for each team member
 
 ## Prerequisites
 
-- `pm-bitable-manager` skill must be available
+- `bitable-manager` skill must be available
 - Feishu CLI authenticated and configured
 - Read `references/feishu-config.md` for configuration values
 - Read `references/project-context.md` for project background understanding
@@ -20,7 +20,7 @@ This skill generates personalized task assignment documents for each team member
 
 ### Step 1: Read Current Task Status
 
-Use `pm-bitable-manager` to read all tasks from the Bitable:
+Use `bitable-manager` to read all tasks from the Bitable:
 
 ```bash
 lark-cli bitable record list --app-token {APP_TOKEN} --table-id {TABLE_ID}
@@ -120,12 +120,14 @@ Person C (后端开发):
 - edit: 修改特定指派
 ```
 
-### Step 4: Send Assignment Documents
+### Step 4: Send and Display
 
-After human confirmation, create Feishu documents and send to group chat:
+After human confirmation:
+
+**For Person B and Person C**: Create Feishu documents and send to group chat:
 
 ```bash
-# Create assignment document for each person
+# Create assignment document for Person B/C
 lark-cli doc create --title "任务指派 — {PERSON_NAME} — {DATE}" \
   --content "$(cat /tmp/assignment-{PERSON}.md)" \
   --folder-token {FOLDER_TOKEN}
@@ -133,7 +135,26 @@ lark-cli doc create --title "任务指派 — {PERSON_NAME} — {DATE}" \
 # Send to group chat
 lark-cli chat message send --chat-id {CHAT_ID} \
   --msg-type interactive \
-  --content '{"config":{"wide_screen_mode":true},"header":{"title":{"tag":"plain_text","content":"📋 任务指派 — {PERSON_NAME} — {DATE}"}},"elements":[{"tag":"markdown","content":"{SUMMARY}"}]}'
+  --content '{"config":{"wide_screen_mode":true},"header":{"title":{"tag":"plain_text","content":"📬 任务指派 — {PERSON_NAME} — {DATE}"}},"elements":[{"tag":"markdown","content":"{SUMMARY}"}]}'
+```
+
+**For Person A (你自己)**: Display directly in the terminal — no need to send to group chat since you're the one generating it:
+
+```
+📋 今日你的任务（Person A）：
+
+🔴 P0 — 紧急
+  [TASK-0001] 实现用户登录API
+  ├─ 截止: 4/20 (今天!)
+  ├─ 验收标准: 邮箱登录返回有效JWT; 微信OAuth完成回调
+  └─ 备注: Person C已确认测试环境数据库就绪
+
+🟡 P1 — 高
+  [TASK-0005] 设计权限模块
+  └─ 截止: 4/22
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+开始工作吧！遇到阻塞随时告诉我。
 ```
 
 ### Step 5: Log and Update

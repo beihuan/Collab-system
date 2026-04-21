@@ -1,5 +1,5 @@
 ---
-name: pm-meeting-assistant
+name: meeting-assistant
 description: Assists with daily standup meetings by generating pre-meeting progress summaries and processing post-meeting minutes. Use when triggered by pre-meeting cron (09:30), when user asks to "prepare meeting", "generate meeting summary", "process meeting notes", or "meeting agenda", or when meeting minutes are provided.
 ---
 
@@ -14,7 +14,7 @@ This skill supports the daily standup meeting workflow in three phases:
 
 ## Prerequisites
 
-- `pm-bitable-manager` skill must be available
+- `bitable-manager` skill must be available
 - Feishu CLI authenticated and configured
 - Read `references/feishu-config.md` for configuration values
 
@@ -140,7 +140,7 @@ Present all extracted action items for human confirmation:
 #### Step 4: Execute Updates
 
 After confirmation:
-1. Use `pm-bitable-manager` to update/create task records
+1. Use `bitable-manager` to update/create task records
 2. Update `references/project-context.md` with new project understanding
 3. Send a summary of changes to the Feishu group chat
 

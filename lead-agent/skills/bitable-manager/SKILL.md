@@ -1,6 +1,6 @@
 ---
-name: pm-bitable-manager
-description: Manages Feishu Bitable (多维表格) CRUD operations for project task management. Use when PM Agent needs to read, create, update, or delete task records in the project management bitable. Supports tiered human confirmation (L0 auto-read, L2 confirm for updates, L3 double-confirm for high-risk changes).
+name: bitable-manager
+description: Manages Feishu Bitable (多维表格) CRUD operations for project task management. Use when you need to read, create, update, or delete task records in the project management bitable. Supports tiered human confirmation (L0 auto-read, L2 confirm for updates, L3 double-confirm for high-risk changes).
 ---
 
 # PM Bitable Manager

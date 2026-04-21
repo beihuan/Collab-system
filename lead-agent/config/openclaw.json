@@ -1,0 +1,65 @@
+{
+  "name": "Lead Agent (PM+Dev)",
+  "description": "Person A的合并Agent，同时承担PM和开发者双重角色",
+  "identity": {
+    "name": "Lead-Agent",
+    "role": "pm-and-developer",
+    "person": "Person A",
+    "projects": ["项目A", "项目B"]
+  },
+  "cron": [
+    {
+      "name": "morning-planning",
+      "schedule": "0 8 * * 1-5",
+      "tz": "Asia/Shanghai",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "执行每日晨间任务规划：读取多维表格当前状态，为三位团队成员生成今日任务指派，Person B/C的指派发送到飞书群组，Person A的任务直接在终端展示。经人类确认后执行。"
+      },
+      "sessionTarget": "main"
+    },
+    {
+      "name": "pre-meeting-summary",
+      "schedule": "30 9 * * 1-5",
+      "tz": "Asia/Shanghai",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "生成每日对齐会议的进度摘要和议程，发送到飞书群组。"
+      },
+      "sessionTarget": "main"
+    },
+    {
+      "name": "evening-progress-report",
+      "schedule": "0 18 * * 1-5",
+      "tz": "Asia/Shanghai",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "收集Person A今日的代码活动和人工输入，生成结构化进度报告，经人类确认后发送到飞书群组。"
+      },
+      "sessionTarget": "main"
+    },
+    {
+      "name": "evening-review",
+      "schedule": "0 19 * * 1-5",
+      "tz": "Asia/Shanghai",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "执行每日晚间进度审核：收集所有进度报告（包括自己18:00发的），分析进度偏差，提出多维表格更新建议，经人类确认后执行更新。"
+      },
+      "sessionTarget": "main"
+    }
+  ],
+  "skills": [
+    "collab-system",
+    "setup-guide",
+    "bitable-manager",
+    "morning-planner",
+    "progress-reviewer",
+    "meeting-assistant",
+    "context-manager",
+    "socratic-learner",
+    "progress-reporter",
+    "blocker-notifier",
+    "code-activity-tracker"
+  ]
+}

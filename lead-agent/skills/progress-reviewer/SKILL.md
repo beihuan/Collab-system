@@ -1,5 +1,5 @@
 ---
-name: pm-progress-reviewer
+name: progress-reviewer
 description: Reviews team progress reports from Feishu group chat, analyzes progress vs plan, identifies deviations and risks, and updates the Bitable accordingly. Use when triggered by evening cron job (19:00), when user asks to "review progress", "check status", "analyze progress", or when new progress reports are detected in the group chat.
 ---
 
@@ -11,7 +11,7 @@ This skill reviews daily progress reports submitted by each developer agent, com
 
 ## Prerequisites
 
-- `pm-bitable-manager` skill must be available
+- `bitable-manager` skill must be available
 - Feishu CLI authenticated and configured
 - Read `references/feishu-config.md` for configuration values
 - Read `references/project-context.md` for project understanding
@@ -27,7 +27,7 @@ Read the latest progress reports from the Feishu group chat:
 lark-cli chat message list --chat-id {CHAT_ID} --limit 20
 ```
 
-Identify progress report messages (they follow the structured format defined in `dev-progress-reporter` skill).
+Identify progress report messages (they follow the structured format defined in `progress-reporter` skill).
 
 For each person, extract:
 - Current tasks with progress
@@ -132,7 +132,7 @@ Based on the analysis, propose specific Bitable updates:
 
 ### Step 6: Execute Updates
 
-After human confirmation, use `pm-bitable-manager` to execute all approved updates.
+After human confirmation, use `bitable-manager` to execute all approved updates.
 
 ### Step 7: Follow-up Questions
 
