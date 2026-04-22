@@ -1,6 +1,6 @@
 # AI Agent 协作项目管理系统
 
-> 基于 OpenClaw + 飞书多维表格 + 飞书群组 IM 的三人团队协作系统
+> 基于 AI Agent + 飞书多维表格 + 飞书群组 IM 的三人团队协作系统
 
 ## 项目简介
 
@@ -22,16 +22,17 @@
 
 ### 1. 飞书侧准备
 
-1. 安装飞书 CLI：`npm install -g lark-cli`
-2. 创建飞书自建应用，获取 App ID 和 App Secret
-3. 认证飞书 CLI：`lark-cli auth login --type=app --app-id=<APP_ID> --app-secret=<APP_SECRET>`
-4. 创建多维表格应用"项目协作管理"，按 `lead-agent/skills/bitable-manager/references/bitable-schema.md` 定义字段
-5. 创建飞书群组，将三人 + 机器人拉入
-6. 记录 `APP_TOKEN`、`TABLE_ID`、`CHAT_ID`
+1. 安装飞书 CLI：`npm install -g @larksuite/cli`
+2. 可选：安装飞书 CLI Skill 扩展：`npx skills add larksuite/cli -y -g`
+3. 创建飞书自建应用，获取 App ID 和 App Secret
+4. 认证飞书 CLI：`lark auth login --type=app --app-id=<APP_ID> --app-secret=<APP_SECRET>`
+5. 创建多维表格应用"项目协作管理"，按 `lead-agent/skills/bitable-manager/references/bitable-schema.md` 定义字段
+6. 创建飞书群组，将三人 + 机器人拉入
+7. 记录 `APP_TOKEN`、`TABLE_ID`、`CHAT_ID`
 
 ### 2. Person A 的 Agent 安装（PM+Dev合并版）
 
-将以下 prompt 粘贴到你的 OpenClaw 对话中：
+将以下 prompt 粘贴到你的 Agent 对话中（支持 OpenClaw / Claude Code / Hermes 等任何 AI Agent）：
 
 ```
 请阅读以下文档并执行其中的安装指令：
@@ -41,7 +42,7 @@ https://raw.githubusercontent.com/beihuan/Collab-system/main/lead-agent/skills/s
 
 ### 3. Person B/C 的开发者 Agent 安装
 
-将以下 prompt 粘贴到每个开发者的 OpenClaw 对话中：
+将以下 prompt 粘贴到每个开发者的 Agent 对话中：
 
 ```
 请阅读以下文档并执行其中的安装指令：
@@ -58,7 +59,7 @@ Collab-system/
 │
 ├── lead-agent/                                  ← Person A 的合并 Agent (PM+Dev)
 │   ├── config/
-│   │   ├── openclaw.json                        ← Cron/Heartbeat/Skill 注册
+│   │   ├── agent-config.json                     ← Cron/Heartbeat/Skill 注册（Agent无关格式）
 │   │   └── HEARTBEAT.md                         ← 心跳检查项（PM+Dev双角色）
 │   └── skills/
 │       ├── collab-system/                       ← 🧠 总控（双重角色定义）
@@ -75,7 +76,7 @@ Collab-system/
 │
 ├── dev-agent/                                   ← Person B/C 的开发者 Agent
 │   ├── config/
-│   │   ├── openclaw.json
+│   │   ├── agent-config.json
 │   │   └── HEARTBEAT.md
 │   └── skills/
 │       ├── dev-collab-system/                   ← 🧠 总控
@@ -107,7 +108,7 @@ Collab-system/
 | `meeting-assistant` | 📋 PM流程 | 会前摘要生成 + 会后纪要处理 |
 | `context-manager` | 📚 知识 | 项目上下文维护，读取代码库和文档 |
 | `socratic-learner` | 📚 知识 | 苏格拉底式追问，持续深化项目理解 |
-| `progress-reporter` | 📋 Dev流程 | 生成Person A的进度报告，关联git活动 |
+| `progress-reporter` | 📋 Dev流程 | 生成Person A的进度报告，记忆优先+Git辅助验证 |
 | `blocker-notifier` | 📋 Dev+PM | 报告阻塞+同时更新bitable，合并确认 |
 | `code-activity-tracker` | 🔧 工具 | 追踪git提交和PR状态，关联任务ID |
 
@@ -117,7 +118,7 @@ Collab-system/
 |-------|------|------|
 | `dev-collab-system` | 🧠 总控 | 开发者角色定义、协作模式、通信协议 |
 | `dev-setup-guide` | 🚀 安装 | 一次性安装引导 |
-| `dev-progress-reporter` | 📋 流程 | 生成结构化进度报告 |
+| `dev-progress-reporter` | 📋 流程 | 生成结构化进度报告，记忆优先+Git辅助验证 |
 | `dev-task-receiver` | 📋 流程 | 接收PM Agent的任务指派 |
 | `dev-blocker-notifier` | 📋 流程 | 检测阻塞并通知PM Agent |
 | `dev-code-activity-tracker` | 🔧 工具 | 追踪git提交和PR状态 |
@@ -130,7 +131,7 @@ Collab-system/
 10:00  人类会议 → 讨论对齐
 会后    人类提供会议纪要 → 你(PM角色)处理 → 更新任务和上下文
        你(Dev角色) → 正常开发工作...
-18:00  你(Dev角色) → 收集进度+代码活动 → 生成报告 → 确认 → 发群组
+18:00  你(Dev角色) → 记忆/对话提取工作+Git辅助验证 → 生成报告 → 确认 → 发群组
 19:00  你(PM角色) → 审核所有报告(含自己的) → 分析偏差 → 更新bitable
 ```
 

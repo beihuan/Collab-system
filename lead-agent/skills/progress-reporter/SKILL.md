@@ -1,82 +1,120 @@
 ---
 name: progress-reporter
-description: Generates structured daily progress reports and submits them to the Feishu group chat. Use when triggered by evening cron job (18:00), when user asks to "report progress", "submit daily report", "write progress update", or "end of day report". Collects work done today, current task status, blockers, and plans for next period.
+description: "基于记忆和对话记录生成每日进度报告并提交到飞书群组。Use when triggered by evening cron job (18:00), when user asks to 'report progress', 'submit daily report', 'write progress update', or 'end of day report'. 优先从Agent记忆和当日对话记录中提取已完成工作，信息不完整时追问人类补充。"
 ---
 
-# Dev Progress Reporter
+# Progress Reporter（Lead Agent — Dev角色）
 
-## Overview
+## 概述
 
-This skill helps developers generate structured progress reports at the end of each work period. It collects information from the current OpenClaw session, git activity, and human input to create a comprehensive report that references task IDs from the Bitable.
+此 Skill 帮助 Person A 生成每日工作进度报告。**核心原则：优先从 Agent 记忆和当日对话记录中提取工作信息，而非依赖 git log。** 只有在记忆和对话信息不足时，才询问人类补充。
 
-## Prerequisites
+## 前置条件
 
-- Feishu CLI authenticated and configured
-- Read `references/feishu-config.md` for configuration values
-- Read `references/identity.md` for your name and role
+- 飞书 CLI 已认证并配置
+- 读取 `references/feishu-config.md` 获取配置值
+- 读取 `references/identity.md` 获取姓名和角色
 
-## Workflow
+## 工作流
 
-### Step 1: Collect Information
+### Step 1: 从记忆和对话记录中提取今日工作
 
-#### 1a. Read Today's Task Assignments
+#### 1a. 回顾当日对话记录
 
-Check the Feishu group chat for today's task assignment document:
+扫描当天与人类的对话记录，提取所有已完成的工作内容：
+
+- 人类要求你完成的开发任务
+- 你帮人类写的代码、调试的bug、查阅的文档
+- 你和人类讨论的技术决策
+- 你帮助完成的非代码工作（文档、设计、沟通）
+
+> **关键**：Agent 应该已经在对话过程中记忆了这些工作。直接回顾 "今天做了什么" 即可。
+
+#### 1b. 收集 Git 活动作为辅助验证
 
 ```bash
-lark-cli chat message list --chat-id {CHAT_ID} --limit 20
-```
-
-Identify the task assignment message for today.
-
-#### 1b. Collect Git Activity
-
-```bash
-# Get today's commits
+# 获取今日提交（仅作辅助验证，不是主要信息来源）
 cd {REPO_PATH}
 git log --author="{GIT_AUTHOR}" --since="today" --oneline
 
-# Get today's changed files
+# 获取今日变更文件
 git diff --stat HEAD~{N}
 
-# Get open PRs
+# 获取开放 PR
 gh pr list --author="{GITHUB_USER}" --state open 2>/dev/null || echo "gh CLI not available"
 ```
 
-#### 1c. Ask Human for Input
+#### 1c. 信息充分性判断
 
-Present the collected information and ask the human to fill in the gaps:
+根据记忆和对话记录，判断是否有足够信息生成报告：
+
+| 信息充分度 | 判断标准 | 处理方式 |
+|-----------|---------|---------|
+| **充分** | 能明确说出今天做了什么、每个任务进展到哪、有无阻塞 | 直接生成报告 |
+| **部分** | 知道做了一些事，但细节不清晰（如进度百分比、完成标准） | 追问补充具体细节 |
+| **不足** | 记忆中没有当日工作记录，或记录过于模糊 | 询问人类描述今日工作 |
+
+### Step 2: 追问补充信息（仅在信息不完整时）
+
+#### 场景 A：记忆有工作记录但细节不足
 
 ```
-我已收集到以下今日活动信息：
+我从今天的对话中了解到你做了以下工作：
 
-📝 Git提交:
-  - abc1234: 实现用户登录JWT验证
-  - def5678: 添加登录API单元测试
+📝 记忆中的工作记录：
+  - 实现了用户登录API
+  - 修复了一个支付回调的bug
 
-📂 变更文件:
-  - src/auth/jwt.ts (+45/-12)
-  - src/api/login.ts (+89/-0)
-  - tests/auth/login.test.ts (+67/-0)
+但有些信息不够清晰，请帮我补充：
 
-🔀 开放PR:
-  - PR #42: feat: 用户登录API (待审核)
+1. "实现用户登录API" — 具体进度到了哪里？
+   ☐ 框架搭建完成
+   ☐ 核心逻辑已实现
+   ☐ 单元测试已编写
+   ☐ 已提交PR
+   ☐ 其他: ___
 
-📋 今日任务指派:
-  - [TASK-0001] 实现用户登录API (P0)
-  - [TASK-0005] 设计权限模块 (P1)
+2. "修复支付回调bug" — 是什么问题？修复方案是什么？已验证了吗？
 
-请补充以下信息：
-1. [TASK-0001] 当前进度百分比？(0%/25%/50%/75%/90%/100%)
-2. [TASK-0005] 是否已开始？进度如何？
-3. 有没有遇到阻塞或风险？
-4. 明天计划做什么？
-5. 有没有需要PM协调的事项？
+3. 还有其他今天做的工作吗？（比如非代码工作：会议、文档、沟通等）
 ```
 
-### Step 2: Generate Progress Report
+#### 场景 B：记忆中没有当日工作记录
 
-Based on the collected information, generate a structured report:
+```
+我今天的记录中没有找到你的工作内容。请告诉我你今天做了什么？
+
+可以简单描述，例如：
+- "今天主要在写登录API，完成了JWT验证部分"
+- "今天开了3个小时会，下午修了两个小bug"
+- "今天主要在做需求分析，没有写代码"
+- "今天没做什么实质性工作"（这也没关系，诚实最重要）
+```
+
+#### 场景 C：人类描述不清晰
+
+如果人类的描述过于模糊（如"写了一些代码"、"搞了一下那个东西"），**必须追问**：
+
+```
+感谢回复！我想更准确地记录你的工作，请补充一点细节：
+
+你提到"写了一些代码"——
+1. 是哪个项目/模块的代码？
+2. 具体做了什么？（比如：新增了什么功能、修改了什么逻辑、修了什么bug？）
+3. 大概完成到什么程度了？（已完成/进行中/刚开始）
+
+这样我才能在进度报告中准确反映你的贡献。
+```
+
+**追问原则**：
+- 一次最多问 3 个问题，避免让人类感到烦躁
+- 提供选项（选择题比开放题更容易回答）
+- 如果人类明显不想多说，就用已有信息 + git 活动填充，不要穷追不舍
+- 目标是"足够准确"，不是"完美无缺"
+
+### Step 3: 生成进度报告
+
+基于收集到的信息，生成结构化报告：
 
 ```markdown
 📊 工作进度汇报 — {PERSON_NAME} — {DATE}
@@ -116,12 +154,9 @@ Based on the collected information, generate a structured report:
 
 ## 风险/卡点
 
-- [TASK-0001] 第三方OAuth服务商的沙箱环境不稳定，微信OAuth回调偶发超时
+- [TASK-0001] 第三方OAuth服务商的沙箱环境不稳定
   - 影响：可能延迟联调完成时间
   - 需要PM协调：是否需要联系服务商确认沙箱稳定性？
-
-- 数据库测试环境磁盘空间不足，影响本地测试
-  - 需要 Person C 协助扩容
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -130,59 +165,67 @@ Based on the collected information, generate a structured report:
 - [TASK-0001] 原计划 4/20 完成 → 因OAuth联调问题预计延迟至 4/22
 ```
 
-### Step 3: Human Confirmation
+### Step 4: 人类确认
 
-Present the report to the human for review:
+将报告展示给人类审核：
 
 ```
 进度报告已生成，请审核：
 
 📊 今日完成: 2个任务推进, 1个任务完成
-⚠️ 风险: 2项（OAuth沙箱不稳定、测试环境磁盘不足）
+⚠️ 风险: 1项（OAuth沙箱不稳定）
 📅 时间变更: [TASK-0001] 延迟2天
 
 确认发送到协作群组？(y/n/edit)
 ```
 
-### Step 4: Submit Report
+### Step 5: 提交报告
 
-After human confirmation, send to the Feishu group chat:
+人类确认后，发送到飞书群组：
 
 ```bash
-# Create a Feishu document with the report
-lark-cli doc create --title "进度汇报 — {PERSON_NAME} — {DATE}" \
-  --content "$(cat /tmp/progress-report.md)" \
-  --folder-token {FOLDER_TOKEN}
+# 发送摘要到群组
+lark-cli chat +message-send --chat-id {CHAT_ID} \
+  --msg-type text \
+  --content "📊 进度汇报 — {PERSON_NAME} — {DATE}
 
-# Send summary to group chat
-lark-cli chat message send --chat-id {CHAT_ID} \
-  --msg-type interactive \
-  --content '{"config":{"wide_screen_mode":true},"header":{"title":{"tag":"plain_text","content":"📊 进度汇报 — {PERSON_NAME} — {DATE}"}},"elements":[{"tag":"markdown","content":"{SUMMARY}"}]}'
+当前任务:
+• [TASK-0001] 实现用户登录API — 90% (今日+15%)
+• [TASK-0005] 设计权限模块 — 25% (今日+25%)
+
+已完成: [TASK-0015] 修复支付回调bug
+风险: OAuth沙箱不稳定，可能延迟
+时间变更: [TASK-0001] 预计延迟至4/22"
 ```
 
-## Report Structure Guidelines
+## 信息来源优先级
 
-The report should be:
-- **Task-centric**: Always reference Bitable task IDs
-- **Factual**: State what was done, not what was intended
-- **Quantitative**: Use progress percentages, commit counts, PR links
-- **Honest**: Don't hide blockers or delays
-- **Forward-looking**: Include clear plans for next period
+生成报告时，信息来源的优先级为：
 
-## Auto-Detection Rules
+| 优先级 | 信息来源 | 可靠度 | 说明 |
+|--------|---------|--------|------|
+| 1 | Agent 记忆/对话记录 | ★★★★ | 最直接的工作描述，但可能遗漏 |
+| 2 | 人类手动补充 | ★★★★★ | 最准确，但依赖人类配合 |
+| 3 | Git 提交记录 | ★★★ | 客观存在，但只能反映代码工作 |
+| 4 | PR 状态 | ★★★ | 客观存在，但覆盖范围窄 |
 
-| Signal | Auto-Detection |
-|--------|---------------|
-| Git commits today | Auto-associate with tasks based on branch name or commit message |
-| PR created/updated | Auto-include in report with link |
-| Task assignment received | Auto-include in "current tasks" section |
-| No git activity | Ask human if they worked on non-code tasks |
+**原则**：以记忆和对话记录为主体，Git 活动作为辅助验证，人类补充作为兜底。
 
-## Error Handling
+## 追问策略
 
-| Scenario | Action |
-|----------|--------|
-| No task assignment found | Report on whatever was worked on, flag as potentially unplanned |
-| Git repo not accessible | Skip git activity collection, rely on human input |
-| Human not available for confirmation | Save draft, remind human when they return |
-| Feishu message send fails | Retry once, then save locally and try again in 5 minutes |
+| 人类回复 | 判断 | 下一步 |
+|---------|------|--------|
+| 详细描述 | 信息充分 | 直接生成报告 |
+| 简短但可理解（"写完了登录API"） | 部分充分 | 追问 1-2 个关键细节（进度%、有无阻塞） |
+| 模糊（"搞了一下"） | 信息不足 | 提供选择题追问 |
+| "没什么" / "没做多少" | 可能真的没进度 | 记录为"低产出日"，不追问 |
+| 不耐烦 | 停止追问 | 用已有信息生成报告 |
+
+## 错误处理
+
+| 场景 | 处理方式 |
+|------|---------|
+| 记忆中无当日工作且无 git 活动 | 直接询问人类今日做了什么 |
+| 人类不可确认 | 保存草稿，下次心跳时提醒 |
+| 飞书消息发送失败 | 重试一次，然后本地保存，5分钟后再试 |
+| Git 仓库不可访问 | 跳过 git 活动，依赖记忆和人类输入 |
